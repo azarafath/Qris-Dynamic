@@ -7,9 +7,20 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-// --- Helper Functions ---
-
-async function createPosterPNG({ qrDataUrl, amount, note, link }: { qrDataUrl: string, amount: number, note?: string, link: string }) {
+// PERUBAHAN DI SINI: Tambahkan 'generatedAt'
+async function createPosterPNG({
+  qrDataUrl,
+  amount,
+  note,
+  link,
+  generatedAt,
+}: {
+  qrDataUrl: string
+  amount: number
+  note?: string
+  link: string
+  generatedAt: Date
+}) {
   const canvas = document.createElement("canvas")
   const width = 1080
   const height = 1350
@@ -17,9 +28,11 @@ async function createPosterPNG({ qrDataUrl, amount, note, link }: { qrDataUrl: s
   canvas.height = height
   const ctx = canvas.getContext("2d")!
 
+  // Background (white)
   ctx.fillStyle = "#ffffff"
   ctx.fillRect(0, 0, width, height)
 
+  // Card glass backdrop
   ctx.fillStyle = "rgba(255,255,255,0.8)"
   roundRect(ctx, 60, 80, width - 120, height - 160, 28)
   ctx.fill()
@@ -27,15 +40,18 @@ async function createPosterPNG({ qrDataUrl, amount, note, link }: { qrDataUrl: s
   ctx.lineWidth = 2
   ctx.stroke()
 
+  // Title
   ctx.fillStyle = "#111111"
   ctx.font = "700 54px system-ui, -apple-system, Segoe UI, Roboto, Helvetica"
   ctx.fillText("Tagihan QRIS", 100, 160)
 
+  // Subtitle
   ctx.fillStyle = "#444444"
   ctx.font = "400 32px system-ui, -apple-system, Segoe UI, Roboto, Helvetica"
   const msg = `Kamu memiliki tagihan sebesar ${formatIDR(amount)}${note ? ` — ${note}` : ""}`
   wrapText(ctx, msg, 100, 210, width - 200, 40)
 
+  // QR
   const img = new Image()
   img.crossOrigin = "anonymous"
   const loaded = new Promise<void>((resolve, reject) => {
@@ -47,6 +63,7 @@ async function createPosterPNG({ qrDataUrl, amount, note, link }: { qrDataUrl: s
   const qrSize = 720
   ctx.drawImage(img, (width - qrSize) / 2, 320, qrSize, qrSize)
 
+  // Amount chip
   ctx.fillStyle = "rgba(0,0,0,0.8)"
   roundRect(ctx, 100, 1080, 420, 80, 16)
   ctx.fill()
@@ -54,12 +71,31 @@ async function createPosterPNG({ qrDataUrl, amount, note, link }: { qrDataUrl: s
   ctx.font = "600 36px system-ui, -apple-system, Segoe UI, Roboto, Helvetica"
   ctx.fillText(formatIDR(amount), 120, 1132)
 
+  // --- PERUBAHAN DI SINI: Tambahkan Teks Tanggal & Waktu ---
+  const formattedDateTime =
+    new Intl.DateTimeFormat("id-ID", {
+      year: "numeric",
+      month: "long",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Asia/Jakarta",
+    }).format(generatedAt) + " WIB"
+
+  ctx.fillStyle = "#888888" // Warna abu-abu yang lebih lembut
+  ctx.font = "400 26px system-ui, -apple-system, Segoe UI, Roboto, Helvetica"
+  ctx.textAlign = "center"
+  ctx.fillText(`Dibuat pada: ${formattedDateTime}`, width / 2, 1200)
+  ctx.textAlign = "left" // Reset alignment
+
+  // Link
   ctx.fillStyle = "#0F6FFF"
   ctx.font = "500 28px system-ui, -apple-system, Segoe UI, Roboto, Helvetica"
   wrapText(ctx, link, 100, 1240, width - 200, 34)
 
   return new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/png", 0.95))
 }
+
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath()
@@ -116,8 +152,11 @@ export default function QrisGenerate() {
       const qr = await QRCode.toDataURL(dynamicPayload, { margin: 1, scale: 8 })
       setQrDataUrl(qr)
 
-      const origin = window.location.origin;
-      const code = encodeCharge({ a: Number(amount), n: note || undefined })
+      const origin = window.location.origin
+      
+      // PERUBAHAN DI SINI: Tambahkan timestamp ke data QR
+      const code = encodeCharge({ a: Number(amount), n: note || undefined, t: Date.now() })
+
       const url = `${origin}/c/${code}`
       setShareUrl(url)
     } finally {
@@ -129,24 +168,29 @@ export default function QrisGenerate() {
     if (!isReady) return
     setIsSharing(true)
     try {
+      // PERUBAHAN DI SINI: Buat objek Date untuk diteruskan
+      const generatedAt = new Date()
+
       const posterBlob = await createPosterPNG({
         qrDataUrl,
         amount: Number(amount),
         note,
         link: shareUrl,
+        generatedAt, // <-- Teruskan objek Date
       })
-
       const files = [new File([posterBlob], "qris-tagihan.png", { type: "image/png" })]
-      const msg = `Kamu memiliki tagihan sebesar ${formatIDR(Number(amount))}${note ? ` — ${note}` : ""}`
-      const message = `Hai, ${msg}\n\n${shareUrl}`
+
+      const caption = `Hai, Kamu memiliki tagihan sebesar ${formatIDR(Number(amount))}${note ? ` — ${note}` : ""}`
+      const messageForClipboard = `${caption}\n\nLink Pembayaran:\n${shareUrl}`
       
-      await navigator.clipboard.writeText(message)
+      await navigator.clipboard.writeText(messageForClipboard)
 
       if (navigator.share && navigator.canShare && navigator.canShare({ files })) {
-        alert("Pesan berikut telah disalin ke clipboard (untuk cadangan):\n\n" + message);
+        alert("Pesan sudah disalin ke clipboard. Silakan pilih aplikasi untuk membagikan.");
+        
         await navigator.share({
           title: "Tagihan QRIS",
-          text: message,
+          text: caption,
           files,
         })
       } else {
@@ -157,9 +201,8 @@ export default function QrisGenerate() {
         URL.revokeObjectURL(a.href)
         
         alert(
-          "Gambar telah diunduh dan pesan berikut disalin ke clipboard:\n\n" + 
-          message + 
-          "\n\nSilakan paste di aplikasi tujuan Anda."
+          "Gambar telah diunduh dan pesan LENGKAP telah disalin ke clipboard.\n\n" +
+          "Silakan buka aplikasi chat Anda, paste pesannya, dan lampirkan gambar."
         )
       }
     } catch (error) {

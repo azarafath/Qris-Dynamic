@@ -10,6 +10,9 @@ export default function ChargePage({ params }: { params: { code: string } }) {
   const [amount, setAmount] = useState<number>(0)
   const [note, setNote] = useState<string | undefined>()
   const [invalid, setInvalid] = useState(false)
+  
+  // PERUBAHAN DI SINI: State untuk menyimpan tanggal pembuatan
+  const [generatedAt, setGeneratedAt] = useState<Date | null>(null)
 
   const rupiah = useMemo(
     () => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }),
@@ -25,6 +28,11 @@ export default function ChargePage({ params }: { params: { code: string } }) {
       }
       setAmount(data.a)
       setNote(data.n)
+      
+      // PERUBAHAN DI SINI: Baca timestamp dari data dan simpan ke state
+      if (data.t) {
+        setGeneratedAt(new Date(data.t))
+      }
 
       const payload = buildDynamicQrisWithAmount(DEFAULT_STATIC_QRIS, Number(data.a))
       const url = await QRCode.toDataURL(payload, {
@@ -90,8 +98,24 @@ export default function ChargePage({ params }: { params: { code: string } }) {
               )}
               <div className="rounded-xl border border-slate-200 bg-white p-4">
                 <div className="text-sm text-slate-600">Status</div>
-                <div className="text-slate-900">Menunggu pembayaran</div>
+                <div className="text-slate-900 font-medium text-amber-600">Menunggu pembayaran</div>
               </div>
+              {generatedAt && (
+                <div className="pl-4">
+                  <div className="text-sm text-slate-400">Dibuat pada</div>
+                  <div className="text-sm text-slate-400">
+                    {new Intl.DateTimeFormat("id-ID", {
+                      year: "numeric",
+                      month: "long",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZone: "Asia/Jakarta",
+                    }).format(generatedAt)}{" "}
+                    WIB
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

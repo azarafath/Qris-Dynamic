@@ -33,7 +33,8 @@ export function buildDynamicQrisWithAmount(staticPayload: string, amount: number
 
 // --- Opaque link codec (base64url + XOR obfuscation) ---
 
-type ChargeData = { a: number; n?: string } // a=amount, n=note
+// PERUBAHAN DI SINI: Tambahkan 't' untuk timestamp
+type ChargeData = { a: number; n?: string; t?: number } // a=amount, n=note, t=timestamp
 
 const KEY = "azf2025"
 
