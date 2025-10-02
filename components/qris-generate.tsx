@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
+// --- Helper Functions ---
+
 async function createPosterPNG({ qrDataUrl, amount, note, link }: { qrDataUrl: string, amount: number, note?: string, link: string }) {
   const canvas = document.createElement("canvas")
   const width = 1080
@@ -15,11 +17,9 @@ async function createPosterPNG({ qrDataUrl, amount, note, link }: { qrDataUrl: s
   canvas.height = height
   const ctx = canvas.getContext("2d")!
 
-  // Background (white)
   ctx.fillStyle = "#ffffff"
   ctx.fillRect(0, 0, width, height)
 
-  // Card glass backdrop
   ctx.fillStyle = "rgba(255,255,255,0.8)"
   roundRect(ctx, 60, 80, width - 120, height - 160, 28)
   ctx.fill()
@@ -27,18 +27,15 @@ async function createPosterPNG({ qrDataUrl, amount, note, link }: { qrDataUrl: s
   ctx.lineWidth = 2
   ctx.stroke()
 
-  // Title
   ctx.fillStyle = "#111111"
   ctx.font = "700 54px system-ui, -apple-system, Segoe UI, Roboto, Helvetica"
   ctx.fillText("Tagihan QRIS", 100, 160)
 
-  // Subtitle
   ctx.fillStyle = "#444444"
   ctx.font = "400 32px system-ui, -apple-system, Segoe UI, Roboto, Helvetica"
   const msg = `Kamu memiliki tagihan sebesar ${formatIDR(amount)}${note ? ` — ${note}` : ""}`
   wrapText(ctx, msg, 100, 210, width - 200, 40)
 
-  // QR
   const img = new Image()
   img.crossOrigin = "anonymous"
   const loaded = new Promise<void>((resolve, reject) => {
@@ -50,7 +47,6 @@ async function createPosterPNG({ qrDataUrl, amount, note, link }: { qrDataUrl: s
   const qrSize = 720
   ctx.drawImage(img, (width - qrSize) / 2, 320, qrSize, qrSize)
 
-  // Amount chip
   ctx.fillStyle = "rgba(0,0,0,0.8)"
   roundRect(ctx, 100, 1080, 420, 80, 16)
   ctx.fill()
@@ -58,12 +54,11 @@ async function createPosterPNG({ qrDataUrl, amount, note, link }: { qrDataUrl: s
   ctx.font = "600 36px system-ui, -apple-system, Segoe UI, Roboto, Helvetica"
   ctx.fillText(formatIDR(amount), 120, 1132)
 
-  // Link
-  ctx.fillStyle = "#0F6FFF" // subtle modern blue accent
+  ctx.fillStyle = "#0F6FFF"
   ctx.font = "500 28px system-ui, -apple-system, Segoe UI, Roboto, Helvetica"
   wrapText(ctx, link, 100, 1240, width - 200, 34)
 
-  return await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/png", 0.95))
+  return new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/png", 0.95))
 }
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -76,14 +71,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath()
 }
 
-function wrapText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineHeight: number,
-) {
+function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) {
   const words = text.split(" ")
   let line = ""
   for (let n = 0; n < words.length; n++) {
@@ -105,6 +93,8 @@ function formatIDR(n: number) {
 }
 
 
+// --- Main Component ---
+
 export default function QrisGenerate() {
   const [amount, setAmount] = useState<number | "">("")
   const [note, setNote] = useState<string>("")
@@ -115,7 +105,7 @@ export default function QrisGenerate() {
 
   const isReady = useMemo(() => !!qrDataUrl && !!shareUrl, [qrDataUrl, shareUrl])
 
-  async function onGenerate() {
+  const onGenerate = async () => {
     if (amount === "" || Number(amount) <= 0) {
       alert("Masukkan nominal yang valid.")
       return
@@ -135,7 +125,7 @@ export default function QrisGenerate() {
     }
   }
 
-  async function onShare() {
+  const onShare = async () => {
     if (!isReady) return
     setIsSharing(true)
     try {
@@ -150,17 +140,16 @@ export default function QrisGenerate() {
       const msg = `Kamu memiliki tagihan sebesar ${formatIDR(Number(amount))}${note ? ` — ${note}` : ""}`
       const message = `Hai, ${msg}\n\n${shareUrl}`
       
+      await navigator.clipboard.writeText(message)
+
       if (navigator.share && navigator.canShare && navigator.canShare({ files })) {
-        await navigator.clipboard.writeText(message);
-        alert("Pesan tagihan telah disalin ke clipboard (untuk cadangan).");
+        alert("Pesan berikut telah disalin ke clipboard (untuk cadangan):\n\n" + message);
         await navigator.share({
           title: "Tagihan QRIS",
           text: message,
           files,
         })
       } else {
-        await navigator.clipboard.writeText(message)
-        
         const a = document.createElement("a")
         a.href = URL.createObjectURL(posterBlob)
         a.download = "qris-tagihan.png"
@@ -168,12 +157,11 @@ export default function QrisGenerate() {
         URL.revokeObjectURL(a.href)
         
         alert(
-          "Pesan disalin & gambar telah diunduh!\n\n" +
-          "Silakan buka aplikasi (Telegram, WhatsApp, dll.), " +
-          "paste pesannya, dan lampirkan gambar dari folder Downloads Anda."
+          "Gambar telah diunduh dan pesan berikut disalin ke clipboard:\n\n" + 
+          message + 
+          "\n\nSilakan paste di aplikasi tujuan Anda."
         )
       }
-
     } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
           console.log('Proses berbagi dibatalkan oleh pengguna.');
@@ -187,7 +175,6 @@ export default function QrisGenerate() {
     }
   }
 
-  // --- PERBAIKAN DI SINI: MENAMBAHKAN KEMBALI 'return' ---
   return (
     <section className="mx-auto w-full max-w-4xl px-4 py-10">
       <div className="rounded-3xl border border-slate-200/60 bg-white/70 p-6 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/50 md:p-10">
