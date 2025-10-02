@@ -202,7 +202,9 @@ export default function QrisGenerate() {
 
       const posterBlob: Blob = await new Promise((resolve) => canvas.toBlob((b) => resolve(b!), "image/png", 0.95))
       const files = [new File([posterBlob], "qris-tagihan.png", { type: "image/png" })]
-      const message = `${msg}\n${shareUrl}`
+      
+      // --- PERUBAHAN DI SINI ---
+      const message = `Hai, ${msg}\n\n${shareUrl}`
 
       if (navigator.share && navigator.canShare && navigator.canShare({ files })) {
         await navigator.share({ title: "Tagihan QRIS", text: message, files })
