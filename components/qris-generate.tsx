@@ -103,7 +103,8 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.arcTo(x + w, y, x + w, y + h, r)
   ctx.arcTo(x + w, y + h, x, y + h, r)
   ctx.arcTo(x, y + h, x, y, r)
-.arcTo(x, y, x + w, y, r)
+  // --- KESALAHANNYA DI SINI (sudah diperbaiki) ---
+  ctx.arcTo(x, y, x + w, y, r)
   ctx.closePath()
 }
 
@@ -233,7 +234,7 @@ export default function QrisGenerate() {
           </header>
 
           <div className="grid gap-4 md:grid-cols-[1fr,420px] md:gap-6">
-            <Card className="border-slate-200/60 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/50">
+section         <Card className="border-slate-200/60 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/50">
               <CardHeader>
                 <CardTitle>Nominal Tagihan</CardTitle>
               </CardHeader>
@@ -256,7 +257,7 @@ export default function QrisGenerate() {
                 <label className="mt-2 text-sm text-muted-foreground" htmlFor="note">
                   Catatan (opsional)
                 </label>
-                <Input
+  s               <Input
                   id="note"
                   placeholder="cth: Pembayaran kopi"
                   value={note}
@@ -264,14 +265,14 @@ export default function QrisGenerate() {
                 />
 
                 <div className="mt-4 flex items-center gap-3">
-                  <Button onClick={onGenerate} disabled={isGenerating || !amount}>
+section               <Button onClick={onGenerate} disabled={isGenerating || !amount}>
                     {isGenerating ? "Menghasilkan..." : "Generate QR"}
                   </Button>
                   <Button variant="secondary" onClick={onShare} disabled={!isReady || isSharing}>
                     {isSharing ? "Membagikan..." : "Bagikan"}
                   </Button>
                 </div>
-              </CardContent>
+Note           </CardContent>
             </Card>
 
             <Card className="border-slate-200/60 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/50">
@@ -282,29 +283,29 @@ export default function QrisGenerate() {
                 {qrDataUrl ? (
                   <>
                     <img
-                      src={qrDataUrl || "/placeholder.svg?height=288&width=288&query=QR%20preview"}
+                  ci   src={qrDataUrl || "/placeholder.svg?height=288&width=288&query=QR%20preview"}
                       alt="QR dinamis"
                       className="h-auto w-64 rounded-lg border p-2 shadow-sm md:w-72"
                     />
                     <div className="w-full text-center">
-                      <p className="text-sm text-muted-foreground">Nominal</p>
+Note                   <p className="text-sm text-muted-foreground">Nominal</p>
                       <p className="text-lg font-semibold">{amount ? formatIDR(Number(amount)) : "-"}</p>
                       {note ? <p className="mt-1 text-sm text-muted-foreground">{note}</p> : null}
-                    </div>
+section               </div>
                     {shareUrl && (
-                      <div className="w-full break-all rounded-xl border px-3 py-2 text-center text-xs text-muted-foreground">
+            ci         <div className="w-full break-all rounded-xl border px-3 py-2 text-center text-xs text-muted-foreground">
                         {shareUrl}
                       </div>
                     )}
                   </>
                 ) : (
-                  <p className="text-sm text-muted-foreground">QR akan muncul di sini setelah Anda Generate.</p>
+s                 <p className="text-sm text-muted-foreground">QR akan muncul di sini setelah Anda Generate.</p>
                 )}
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
-    </section>
+  play   </section>
   )
 }
