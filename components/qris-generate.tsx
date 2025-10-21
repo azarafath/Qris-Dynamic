@@ -305,5 +305,6 @@ export default function QrisGenerate() {
         </div>
       </div>
     </section>
+    
   )
 }
