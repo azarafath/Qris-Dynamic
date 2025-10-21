@@ -43,7 +43,7 @@ async function createPosterPNG({
   // Title
   ctx.fillStyle = "#111111"
   ctx.font = "700 54px system-ui, -apple-system, Segoe UI, Roboto, Helvetica"
-  ctx.fillText("Tagihan QRIS", 100, 160) // Catatan: Ini mungkin juga perlu diubah agar konsisten
+  ctx.fillText("Tagihan QRIS", 100, 160)
 
   // Subtitle
   ctx.fillStyle = "#444444"
@@ -103,7 +103,6 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.arcTo(x + w, y, x + w, y + h, r)
   ctx.arcTo(x + w, y + h, x, y + h, r)
   ctx.arcTo(x, y + h, x, y, r)
-  // --- KESALAHANNYA DI SINI (sudah diperbaiki) ---
   ctx.arcTo(x, y, x + w, y, r)
   ctx.closePath()
 }
@@ -224,9 +223,8 @@ export default function QrisGenerate() {
       <div className="rounded-3xl border border-slate-200/60 bg-white/70 p-6 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/50 md:p-10">
         <div className="flex flex-col gap-6 md:gap-8">
           <header className="text-center">
-            {/* --- PERUBAHAN DI SINI --- */}
             <h1 className="text-balance text-2xl font-semibold tracking-tight md:text-4xl">
-              Traktir Azarafath
+              QRIS Dinamis — Tagih dengan Sekali Klik
             </h1>
             <p className="mt-2 text-pretty text-sm text-muted-foreground md:text-base">
               Masukkan nominal, generate QR, lalu bagikan sebagai gambar & tautan.
@@ -234,7 +232,7 @@ export default function QrisGenerate() {
           </header>
 
           <div className="grid gap-4 md:grid-cols-[1fr,420px] md:gap-6">
-section         <Card className="border-slate-200/60 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/50">
+            <Card className="border-slate-200/60 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/50">
               <CardHeader>
                 <CardTitle>Nominal Tagihan</CardTitle>
               </CardHeader>
@@ -257,7 +255,7 @@ section         <Card className="border-slate-200/60 bg-white/70 backdrop-bl
                 <label className="mt-2 text-sm text-muted-foreground" htmlFor="note">
                   Catatan (opsional)
                 </label>
-  s               <Input
+                <Input
                   id="note"
                   placeholder="cth: Pembayaran kopi"
                   value={note}
@@ -265,14 +263,14 @@ section         <Card className="border-slate-200/60 bg-white/70 backdrop-bl
                 />
 
                 <div className="mt-4 flex items-center gap-3">
-section               <Button onClick={onGenerate} disabled={isGenerating || !amount}>
+                  <Button onClick={onGenerate} disabled={isGenerating || !amount}>
                     {isGenerating ? "Menghasilkan..." : "Generate QR"}
                   </Button>
                   <Button variant="secondary" onClick={onShare} disabled={!isReady || isSharing}>
                     {isSharing ? "Membagikan..." : "Bagikan"}
                   </Button>
                 </div>
-Note           </CardContent>
+              </CardContent>
             </Card>
 
             <Card className="border-slate-200/60 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/50">
@@ -283,29 +281,29 @@ Note           </CardContent>
                 {qrDataUrl ? (
                   <>
                     <img
-                  ci   src={qrDataUrl || "/placeholder.svg?height=288&width=288&query=QR%20preview"}
+                      src={qrDataUrl || "/placeholder.svg?height=288&width=288&query=QR%20preview"}
                       alt="QR dinamis"
                       className="h-auto w-64 rounded-lg border p-2 shadow-sm md:w-72"
                     />
                     <div className="w-full text-center">
-Note                   <p className="text-sm text-muted-foreground">Nominal</p>
+                      <p className="text-sm text-muted-foreground">Nominal</p>
                       <p className="text-lg font-semibold">{amount ? formatIDR(Number(amount)) : "-"}</p>
                       {note ? <p className="mt-1 text-sm text-muted-foreground">{note}</p> : null}
-section               </div>
+                    </div>
                     {shareUrl && (
-            ci         <div className="w-full break-all rounded-xl border px-3 py-2 text-center text-xs text-muted-foreground">
+                      <div className="w-full break-all rounded-xl border px-3 py-2 text-center text-xs text-muted-foreground">
                         {shareUrl}
                       </div>
                     )}
                   </>
                 ) : (
-s                 <p className="text-sm text-muted-foreground">QR akan muncul di sini setelah Anda Generate.</p>
+                  <p className="text-sm text-muted-foreground">QR akan muncul di sini setelah Anda Generate.</p>
                 )}
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
-  play   </section>
+    </section>
   )
 }
